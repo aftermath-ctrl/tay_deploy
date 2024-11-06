@@ -8,7 +8,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Text Generation Chat</title>
+            <!-- Bootstrap CSS -->
+        <link href="{% static 'fur/css/bootstrap.min.css' %}" rel="stylesheet">
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+        <link href="{% static '/fur/css/tiny-slider.css' %}" rel="stylesheet">
+        <link href="{% static '/fur/css/style.css' %}" rel="stylesheet">
+        <title>tayberry </title>
+          <link href="{% static '/fur/tayberryAI-.png' %}" rel="icon">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -24,7 +30,7 @@
         }
 
         .chat-container {
-            max-width: 600px;
+            max-width: 800px;
             margin: 0 auto;
             background-color: #fff;
             padding: 20px;
@@ -72,7 +78,7 @@
         }
 
         .form-container {
-            max-width: 600px;
+            max-width: 800px;
             margin: 20px auto 0;
         }
 
@@ -80,6 +86,10 @@
             width: 100%;
             display: flex;
             flex-direction: column;
+        }
+        form .form-field {
+            margin-bottom: 15px;
+            width: 50%;
         }
 
         form input, form select, form button {
@@ -90,6 +100,7 @@
             border: 1px solid #ccc;
             transition: border 0.3s;
             width: 100%;
+            height: 2em; /* Reduced height */
         }
 
         button {
@@ -123,7 +134,8 @@
     </style>
 </head>
 <body>
-    <h1>Text Generation Chat</h1>
+
+      
 
     <div class="chat-container" id="chatContainer">
         <!-- Chat messages will be displayed here -->
@@ -132,10 +144,12 @@
     <div class="form-container">
         <form id="generationForm">
             {% csrf_token %}
-{{ form|crispy }}
+             {{ form|crispy }}
             <button type="submit" id="submitButton">Submit</button>
             <div id="loading-spinner"></div>
         </form>
+ 
+
     </div>
 
     <script>
@@ -185,6 +199,37 @@
             return cleanedText;
         }
 
+        async function startNewChat() {
+            // Clear the chat container
+            chatContainer.innerHTML = '';
+
+            // Reset the form
+            form.reset();
+
+            // Enable the submit button and hide the loading spinner
+            submitButton.disabled = false;
+            loadingSpinner.style.display = 'none';
+
+            // Fetch and display the chat history
+            await displayChatHistory();
+        }
+
+        async function displayChatHistory() {
+            try {
+                const response = await fetch("{% url 'chat_history' %}");
+                if (!response.ok) throw new Error("Failed to fetch chat history");
+                const chatHistory = await response.json();
+
+                for (const chat of chatHistory) {
+                    addMessage(chat.user_input, true);
+                    addMessage(chat.bot_response, false);
+                }
+            } catch (error) {
+                console.error("Error fetching chat history:", error);
+                addMessage("Failed to load chat history.", false);
+            }
+        }
+
         form.addEventListener('submit', async function(event) {
             event.preventDefault();
 
@@ -235,6 +280,10 @@
             }
         });
     </script>
+
+        <script src="{% static '/fur/js/bootstrap.bundle.min.js' %}"></script>
+        <script src="{% static '/fur/js/tiny-slider.js' %}"></script>
+        <script src="{% static '/fur/js/custom.js' %}"></script>
 </body>
 </html>
 
@@ -248,347 +297,3 @@
 
 
 
-
-
-
-<!-- /*
-* Bootstrap 5
-* Template Name: Furni
-* Template Author: Untree.co
-* Template URI: https://untree.co/
-* License: https://creativecommons.org/licenses/by/3.0/
-*/ -->
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <meta name="author" content="Untree.co">
-  <link rel="shortcut icon" href="favicon.png">
-
-  <meta name="description" content="" />
-  <meta name="keywords" content="bootstrap, bootstrap4" />
-
-        <!-- Bootstrap CSS -->
-        <link href="{% static 'fur/css/bootstrap.min.css' %}" rel="stylesheet">
-        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-        <link href="{% static '/fur/css/tiny-slider.css' %}" rel="stylesheet">
-        <link href="{% static '/fur/css/style.css' %}" rel="stylesheet">
-        <title>afmplace, Inc </title>
-          <link href="{% static '/fur/afmplace.png' %}" rel="icon">
-
-
-   <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f7fc;
-            color: #333;
-            padding: 20px;
-            margin: 0;
-        }
-
-        h1 {
-            text-align: center;
-            color: #4CAF50;
-        }
-
-        .chat-container {
-            max-width: 600px;
-            margin: 0 auto;
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            height: 80vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            overflow-y: auto;
-        }
-
-        .message {
-            margin-bottom: 15px;
-            padding: 10px;
-            border-radius: 8px;
-            max-width: 80%;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-        }
-
-        .user-message {
-            background-color: #d9fdd3;
-            align-self: flex-end;
-            color: #333;
-        }
-
-        .ai-message {
-            background-color: #e7f7fe;
-            align-self: flex-start;
-            color: #333;
-        }
-
-        .typing-cursor {
-            display: inline-block;
-            width: 0.5em;
-            height: 1.2em;
-            background-color: #333;
-            margin-left: 2px;
-            animation: blink 1s step-end infinite;
-        }
-
-        @keyframes blink {
-            50% { opacity: 0; }
-        }
-
-        .form-container {
-            max-width: 600px;
-            margin: 20px auto 0;
-        }
-
-        form {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-        }
-
-        form input, form select, form button {
-            margin-bottom: 15px;
-            padding: 10px;
-            font-size: 16px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-            transition: border 0.3s;
-            width: 100%;
-        }
-
-        button {
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        button:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
-        }
-
-        #loading-spinner {
-            display: none;
-            margin-left: 10px;
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #4CAF50;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-    </style>
-
-    </head>
-
-    <body>
-
-        <!-- Start Header/Navigation -->
-        <nav class="custom-navbar navbar navbar navbar-expand-md navbar-dark bg-dark" arial-label="Furni navigation bar">
-
-            <div class="container">
-                <a class="navbar-brand" href="index.html">
-                    <img src="{% static '/fur/tayberryAI-.png' %}" 
-     alt="Company Logo" 
-     width="50" 
-     height="auto" 
-     loading="lazy" 
-     style="max-width: 100%; height: auto; object-fit: contain;" 
-     title="Company Logo" 
-     aria-label="Company Logo" />
-
-
-                    <span></span></a>
-
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarsFurni" aria-controls="navbarsFurni" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-
-                <div class="collapse navbar-collapse" id="navbarsFurni">
-                    <ul class="custom-navbar-nav navbar-nav ms-auto mb-2 mb-md-0">
-                        <li class="nav-item active">
-                            <a class="nav-link" href="index.html">Home</a>
-                        </li>
-                    </ul>
-
-                
-                </div>
-            </div>
-                
-        </nav>
-        <!-- End Header/Navigation -->
-
-
-
-    <h1>Text Generation Chat</h1>
-
-
-
-<img src="">
-
-    <div class="chat-container" id="chatContainer">
-        <!-- Chat messages will be displayed here -->
-    </div>
-
-    <div class="form-container">
-        <form id="generationForm">
-            {% csrf_token %}
-            {{ form|crispy }}
-            <button type="submit" id="submitButton">Submit</button>
-            <div id="loading-spinner"></div>
-        </form>
-    </div>
-
-    
-
-
-
-
-
-        
-
-        <!-- Start Footer Section -->
-        <footer class="footer-section">
-            <div class="container relative">
-
-                
-
-
-                <div class="border-top copyright">
-                    <div class="row pt-4">
-                        <div class="col-lg-6">
-                            <p class="mb-2 text-center text-lg-start"> &copy;<script>document.write(new Date().getFullYear());</script>.afmplace, Inc. All Rights Reserved.     </a>  <!-- License information: https://untree.co/license/ -->
-            </p>
-                        </div>
-
-                        <div class="col-lg-6 text-center text-lg-end">
-                            <ul class="list-unstyled d-inline-flex ms-auto">
-                                <li class="me-4"><a href="#">Terms &amp; Conditions</a></li>
-                                <li><a href="#">Privacy Policy</a></li>
-                            </ul>
-                        </div>
-
-                    </div>
-                </div>
-
-            </div>
-        </footer>
-        <!-- End Footer Section --> 
-        <script>
-        const chatContainer = document.getElementById('chatContainer');
-        const form = document.getElementById('generationForm');
-        const submitButton = document.getElementById('submitButton');
-        const loadingSpinner = document.getElementById('loading-spinner');
-
-        // Function to create a typing animation
-        async function typeMessage(element, text, speed = 30) {
-            const cursor = document.createElement('span');
-            cursor.classList.add('typing-cursor');
-            element.appendChild(cursor);
-            
-            for (let i = 0; i < text.length; i++) {
-                element.insertBefore(document.createTextNode(text[i]), cursor);
-                await new Promise(resolve => setTimeout(resolve, speed));
-            }
-            
-            // Remove cursor after typing is complete
-            cursor.remove();
-        }
-
-        // Function to add a new message to the chat
-        function addMessage(content, isUser = true) {
-            const messageElement = document.createElement('div');
-            messageElement.classList.add('message');
-            messageElement.classList.add(isUser ? 'user-message' : 'ai-message');
-            
-            chatContainer.appendChild(messageElement);
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-
-            if (isUser) {
-                // User messages appear instantly
-                messageElement.textContent = content;
-            } else {
-                // AI messages have typing animation
-                typeMessage(messageElement, content);
-            }
-        }
-
-        // Function to clean response text
-        function cleanResponseText(response, input) {
-            let cleanedText = response.replace(input, '').trim();
-            cleanedText = cleanedText.replace(/^\n+/, ''); // Remove leading newlines
-            cleanedText = cleanedText.replace(/\n+/g, ' '); // Replace newlines with spaces
-            return cleanedText;
-        }
-
-        form.addEventListener('submit', async function(event) {
-            event.preventDefault();
-
-            const formData = new FormData(form);
-            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
-            // Disable the button and show loading spinner
-            submitButton.disabled = true;
-            loadingSpinner.style.display = 'inline-block';
-
-            // Get user input and add to chat
-            const userInput = formData.get('text_input');
-            addMessage(userInput, true);
-
-            try {
-                const response = await fetch("{% url 'handle_post' %}", {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': csrfToken
-                    },
-                    body: formData
-                });
-
-                if (!response.ok) throw new Error("Network response was not ok");
-
-                const data = await response.json();
-
-                // Handle the response
-                if (data.result_text) {
-                    const cleanedResponse = cleanResponseText(data.result_text, userInput);
-                    if (cleanedResponse) {
-                        addMessage(cleanedResponse, false);
-                    }
-                    form.reset();
-                } else if (data.error) {
-                    addMessage(`Error: ${data.error}`, false);
-                } else if (data.errors) {
-                    addMessage(`Form errors: ${JSON.stringify(data.errors)}`, false);
-                }
-
-            } catch (error) {
-                console.error("Error:", error);
-                addMessage("An error occurred while processing your request.", false);
-            } finally {
-                // Re-enable the submit button and hide the loading spinner
-                submitButton.disabled = false;
-                loadingSpinner.style.display = 'none';
-            }
-        });
-    </script>
-
-
-
-        <script src="{% static '/fur/js/bootstrap.bundle.min.js' %}"></script>
-        <script src="{% static '/fur/js/tiny-slider.js' %}"></script>
-        <script src="{% static '/fur/js/custom.js' %}"></script>
-    </body>
-</html>

@@ -11,6 +11,7 @@ import requests
 from django.http import JsonResponse
 from django.shortcuts import render
 from .forms import TextGenerationForm
+from accounts.models import ChatHistory
 from django.views.decorators.csrf import csrf_exempt
 
 @csrf_exempt
@@ -55,65 +56,8 @@ def generate_text_view(request):
     return render(request, "generate_text.html", {"form": form})
 
 
-from django.shortcuts import render
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from pydantic import BaseModel, ValidationError
-from accounts.models import PromptFormat
-import requests
 
-# Define the Pydantic model for validation
-class PromptRequest(BaseModel):
-    text_input: str
-    max_tokens: int = 20
-    bad_words: str = ""
-    stop_words: str = ""
 
-@csrf_exempt
-def generate_response(request):
-    url = "http://54.204.29.1:8000/v2/models/ensemble/generate"
-
-    if request.method == "POST":
-        # Parse form data into dictionary
-        form_data = {
-            "text_input": request.POST.get("text_input", ""),
-            "max_tokens": int(request.POST.get("max_tokens", 20)),
-            "bad_words": request.POST.get("bad_words", ""),
-            "stop_words": request.POST.get("stop_words", ""),
-        }
-
-        try:
-            # Validate form data using Pydantic
-            data = PromptRequest(**form_data)
-
-            # Prepare the payload for the API call
-            payload = data.dict()
-
-            # Make the API call
-            response = requests.post(url, json=payload, verify=False, timeout=10)
-            result = response.json()
-            print(result)
-
-            # If this is an AJAX request, return JSON directly
-            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                return JsonResponse({"generated_text": result.get("generated_text", "")})
-
-            # For non-AJAX, render the full template with context
-            return render(request, "generate_prompt.html", {
-                "response": result.get("generated_text", ""),
-                "request_data": form_data
-            })
-
-        except ValidationError as e:
-            # Handle validation errors and return them in context
-            errors = e.errors()
-            return render(request, "generate_prompt.html", {
-                "errors": errors,
-                "request_data": form_data
-            })
-
-    # Render template on GET request
-    return render(request, "generate_prompt.html")
 
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -168,6 +112,13 @@ def handle_post(request):
                     # Split by period and take the first complete sentence
                     sentences = result_text.split('.')
                     result_text = sentences[0].strip() + '.'
+
+                       # Save the chat history
+                    ChatHistory.objects.create(
+                        user_input=text_input,
+                        bot_response=result_text
+                    )
+                    
                     
                     if not result_text:  # If empty after cleaning
                         result_text = "No additional text generated."
@@ -182,6 +133,13 @@ def handle_post(request):
                 
         print("Form Errors:", form.errors)
         return JsonResponse({"errors": form.errors}, status=400)
+    return JsonResponse({"error": "Invalid request"}, status=400)
+
+def chat_history(request):
+    if request.method == "GET":
+        chat_logs = ChatHistory.objects.order_by('-timestamp')
+        data = [{"user_input": log.user_input, "bot_response": log.bot_response} for log in chat_logs]
+        return JsonResponse(data, safe=False)
     return JsonResponse({"error": "Invalid request"}, status=400)
 
 
