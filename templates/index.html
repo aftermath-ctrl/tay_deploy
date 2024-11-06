@@ -2,20 +2,20 @@
 
 {% load crispy_forms_tags %}
 
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <!-- Bootstrap CSS -->
-        <link href="{% static 'fur/css/bootstrap.min.css' %}" rel="stylesheet">
-        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-        <link href="{% static '/fur/css/tiny-slider.css' %}" rel="stylesheet">
-        <link href="{% static '/fur/css/style.css' %}" rel="stylesheet">
-        <title>tayberry </title>
-          <link href="{% static '/fur/tayberryAI-.png' %}" rel="icon">
+    <!-- Bootstrap CSS -->
+    <link href="{% static 'fur/css/bootstrap.min.css' %}" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link href="{% static 'fur/css/tiny-slider.css' %}" rel="stylesheet">
+    <link href="{% static 'fur/css/style.css' %}" rel="stylesheet">
+    <title>tayberry</title>
+    <link href="{% static 'fur/tayberryAI-.png' %}" rel="icon">
     <style>
+        /* Page and form styles */
         body {
             font-family: Arial, sans-serif;
             background-color: #f4f7fc;
@@ -24,14 +24,12 @@
             margin: 0;
         }
 
-        h1 {
-            text-align: center;
-            color: #4CAF50;
+        .chat-container, .form-container {
+            max-width: 800px;
+            margin: 0 auto;
         }
 
         .chat-container {
-            max-width: 800px;
-            margin: 0 auto;
             background-color: #fff;
             padding: 20px;
             border-radius: 8px;
@@ -55,13 +53,11 @@
         .user-message {
             background-color: #d9fdd3;
             align-self: flex-end;
-            color: #333;
         }
 
         .ai-message {
             background-color: #e7f7fe;
             align-self: flex-start;
-            color: #333;
         }
 
         .typing-cursor {
@@ -77,54 +73,72 @@
             50% { opacity: 0; }
         }
 
-        .form-container {
-            max-width: 800px;
-            margin: 20px auto 0;
-        }
-
-        form {
+        /* Sign-in popup styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
             width: 100%;
-            display: flex;
-            flex-direction: column;
-        }
-        form .form-field {
-            margin-bottom: 15px;
-            width: 50%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
         }
 
-        form input, form select, form button {
-            margin-bottom: 15px;
+        .modal-content {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .modal button {
+            margin-top: 10px;
             padding: 10px;
-            font-size: 16px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-            transition: border 0.3s;
-            width: 100%;
-            height: 2em; /* Reduced height */
-        }
-
-        button {
             background-color: #4CAF50;
             color: white;
             border: none;
+            border-radius: 5px;
             cursor: pointer;
-            transition: background-color 0.3s;
         }
 
-        button:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
+        /* Hide CSRF token field */
+        input[name="csrfmiddlewaretoken"] {
+            display: none;
+        }
+
+        .form-container {
+            max-width: 800px;
+            margin: 20px auto 0;
+            position: relative;
         }
 
         #loading-spinner {
-            display: none;
-            margin-left: 10px;
+            visibility: hidden;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             border: 4px solid #f3f3f3;
             border-top: 4px solid #4CAF50;
             border-radius: 50%;
             width: 24px;
             height: 24px;
             animation: spin 1s linear infinite;
+            z-index: 10;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .visible {
+            display: block;
         }
 
         @keyframes spin {
@@ -134,166 +148,126 @@
     </style>
 </head>
 <body>
-
-      
-
-    <div class="chat-container" id="chatContainer">
-        <!-- Chat messages will be displayed here -->
-    </div>
+    <div class="chat-container" id="chatContainer"></div>
 
     <div class="form-container">
+        <div id="loading-spinner" class="hidden"></div>
+        
         <form id="generationForm">
             {% csrf_token %}
-             {{ form|crispy }}
+            {{ form|crispy }}
             <button type="submit" id="submitButton">Submit</button>
-            <div id="loading-spinner"></div>
         </form>
- 
-
+    </div>
+    <div class="modal" id="signInModal">
+        <div class="modal-content">
+            <p>You have reached the limit of 5 prompts. Please sign in to continue.</p>
+            <button onclick="redirectToSignIn()">Sign In</button>
+        </div>
     </div>
 
     <script>
         const chatContainer = document.getElementById('chatContainer');
         const form = document.getElementById('generationForm');
         const submitButton = document.getElementById('submitButton');
+        const signInModal = document.getElementById('signInModal');
         const loadingSpinner = document.getElementById('loading-spinner');
+        let promptCount = 0;
 
-        // Function to create a typing animation
         async function typeMessage(element, text, speed = 30) {
             const cursor = document.createElement('span');
             cursor.classList.add('typing-cursor');
             element.appendChild(cursor);
-            
+
             for (let i = 0; i < text.length; i++) {
                 element.insertBefore(document.createTextNode(text[i]), cursor);
                 await new Promise(resolve => setTimeout(resolve, speed));
             }
-            
-            // Remove cursor after typing is complete
             cursor.remove();
+
+            // Show the input field after typing animation ends
+            form.classList.remove('hidden');
+            loadingSpinner.classList.add('hidden');
         }
 
-        // Function to add a new message to the chat
         function addMessage(content, isUser = true) {
             const messageElement = document.createElement('div');
-            messageElement.classList.add('message');
-            messageElement.classList.add(isUser ? 'user-message' : 'ai-message');
-            
+            messageElement.classList.add('message', isUser ? 'user-message' : 'ai-message');
             chatContainer.appendChild(messageElement);
             chatContainer.scrollTop = chatContainer.scrollHeight;
 
             if (isUser) {
-                // User messages appear instantly
                 messageElement.textContent = content;
             } else {
-                // AI messages have typing animation
                 typeMessage(messageElement, content);
             }
         }
 
-        // Function to clean response text
-        function cleanResponseText(response, input) {
-            let cleanedText = response.replace(input, '').trim();
-            cleanedText = cleanedText.replace(/^\n+/, ''); // Remove leading newlines
-            cleanedText = cleanedText.replace(/\n+/g, ' '); // Replace newlines with spaces
-            return cleanedText;
+        // Display the sign-in popup
+        function showSignInPopup() {
+            signInModal.style.display = 'flex';
         }
 
-        async function startNewChat() {
-            // Clear the chat container
-            chatContainer.innerHTML = '';
-
-            // Reset the form
-            form.reset();
-
-            // Enable the submit button and hide the loading spinner
-            submitButton.disabled = false;
-            loadingSpinner.style.display = 'none';
-
-            // Fetch and display the chat history
-            await displayChatHistory();
-        }
-
-        async function displayChatHistory() {
-            try {
-                const response = await fetch("{% url 'chat_history' %}");
-                if (!response.ok) throw new Error("Failed to fetch chat history");
-                const chatHistory = await response.json();
-
-                for (const chat of chatHistory) {
-                    addMessage(chat.user_input, true);
-                    addMessage(chat.bot_response, false);
-                }
-            } catch (error) {
-                console.error("Error fetching chat history:", error);
-                addMessage("Failed to load chat history.", false);
-            }
+        // Redirect to sign-in page
+        function redirectToSignIn() {
+            window.location.href = "{% url 'account_signup' %}";
         }
 
         form.addEventListener('submit', async function(event) {
             event.preventDefault();
+            promptCount += 1;
+
+            if (promptCount > 5) {
+                showSignInPopup();
+                return;
+            }
 
             const formData = new FormData(form);
             const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
-            // Disable the button and show loading spinner
-            submitButton.disabled = true;
-            loadingSpinner.style.display = 'inline-block';
+            // Hide the form input field and show the loading spinner
+            form.classList.add('hidden');
+            loadingSpinner.classList.remove('hidden');
+            loadingSpinner.classList.add('visible');
 
-            // Get user input and add to chat
             const userInput = formData.get('text_input');
             addMessage(userInput, true);
 
             try {
                 const response = await fetch("{% url 'handle_post' %}", {
                     method: 'POST',
-                    headers: {
-                        'X-CSRFToken': csrfToken
-                    },
+                    headers: { 'X-CSRFToken': csrfToken },
                     body: formData
                 });
 
                 if (!response.ok) throw new Error("Network response was not ok");
 
                 const data = await response.json();
-
-                // Handle the response
                 if (data.result_text) {
-                    const cleanedResponse = cleanResponseText(data.result_text, userInput);
-                    if (cleanedResponse) {
-                        addMessage(cleanedResponse, false);
-                    }
+                    addMessage(data.result_text, false);
                     form.reset();
                 } else if (data.error) {
                     addMessage(`Error: ${data.error}`, false);
                 } else if (data.errors) {
                     addMessage(`Form errors: ${JSON.stringify(data.errors)}`, false);
                 }
-
             } catch (error) {
                 console.error("Error:", error);
                 addMessage("An error occurred while processing your request.", false);
             } finally {
-                // Re-enable the submit button and hide the loading spinner
-                submitButton.disabled = false;
-                loadingSpinner.style.display = 'none';
+                // Hide the spinner and show the input field after AI response
+                loadingSpinner.classList.remove('visible');
+                loadingSpinner.classList.add('hidden');
+                form.classList.remove('hidden');
+            }
+        });
+
+        form.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                submitButton.click();
             }
         });
     </script>
-
-        <script src="{% static '/fur/js/bootstrap.bundle.min.js' %}"></script>
-        <script src="{% static '/fur/js/tiny-slider.js' %}"></script>
-        <script src="{% static '/fur/js/custom.js' %}"></script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-

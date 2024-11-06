@@ -6,7 +6,15 @@ from django.contrib.auth import get_user_model
 
 
 class CustomUser(AbstractUser):
-	pass 
+	is_customer = models.BooleanField(default=True)
+    
+
+
+class Customer(models.Model):
+    user = models.OneToOneField(CustomUser, on_delete = models.CASCADE, primary_key = True)
+
+    def __str__(self):
+        return self.user
 
 
 

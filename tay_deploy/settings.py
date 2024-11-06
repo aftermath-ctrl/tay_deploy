@@ -37,13 +37,26 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
 
     "crispy_forms", # new
     "crispy_bootstrap5", # new
 
+    'allauth',
+    'allauth.account',
+
     'accounts.apps.AccountsConfig',
     'pages.apps.PagesConfig', # new
 ]
+
+SITE_ID = 1
+
+AUTHENTICATION_BACKENDS = (
+    "django.contrib.auth.backends.ModelBackend",
+    "allauth.account.auth_backends.AuthenticationBackend", # new
+)
+
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend" # new
 
 AUTH_USER_MODEL = "accounts.CustomUser" 
 
@@ -148,3 +161,5 @@ CRISPY_TEMPLATE_PACK = "bootstrap5" # new
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
