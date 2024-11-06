@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-10 offset-md-1">
+            <div class="card">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h2 class="mb-0">Query History</h2>
+                    <a href="{% url 'financial_query' %}" class="btn btn-light">New Query</a>
+                </div>
+                <div class="card-body">
+                    {% if queries %}
+                        <div class="list-group">
+                            {% for query in queries %}
+                            <div class="list-group-item">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h5 class="mb-1">{{ query.template.name }}</h5>
+                                    <small>{{ query.created_at|timesince }} ago</small>
+                                </div>
+                                <p class="mb-1"><strong>Prompt:</strong> {{ query.prompt|truncatechars:200 }}</p>
+                                <div class="mb-2">
+                                    <strong>Parameters:</strong> 
+                                    <span class="badge bg-secondary">Temperature: {{ query.parameters.temperature }}</span>
+                                    <span class="badge bg-secondary">Max Tokens: {{ query.parameters.max_tokens }}</span>
+                                    <span class="badge bg-secondary">Top P: {{ query.parameters.top_p }}</span>
+                                </div>
+                                <div class="accordion" id="response-{{ query.id }}">
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                                                    data-bs-target="#response-body-{{ query.id }}">
+                                                View Response
+                                            </button>
+                                        </h2>
+                                        <div id="response-body-{{ query.id }}" class="accordion-collapse collapse">
+                                            <div class="accordion-body">
+                                                <pre class="bg-light p-3 rounded">{{ query.response|pprint }}</pre>
+                                                <button class="btn btn-outline-primary btn-sm mt-2" 
+                                                        onclick="copyResponse('{{ query.id }}')">
+                                                    Copy to Clipboard
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        {% if is_paginated %}
+                        <nav class="mt-4">
+                            <ul class="pagination justify-content-center">
+                                {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                                </li>
+                                {% endif %}
+                                
+                                {% for num in page_obj.paginator.page_range %}
+                                    {% if page_obj.number == num %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ num }}</span>
+                                    </li>
+                                    {% else %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                    </li>
+                                    {% endif %}
+                                {% endfor %}
+                                
+                                {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <h4>No queries yet</h4>
+                            <p class="text-muted">Start by creating a new financial analysis query</p>
+                            <a href="{% url 'financial_query' %}" class="btn btn-primary mt-3">Create New Query</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+function copyResponse(queryId) {
+    const responseText = document.querySelector(`#response-body-${queryId} pre`).textContent;
+    navigator.clipboard.writeText(responseText)
+        .then(() => {
+            const button = document.querySelector(`#response-body-${queryId} button`);
+            const originalText = button.textContent;
+            button.textContent = 'Copied!';
+            setTimeout(() => {
+                button.textContent = originalText;
+            }, 2000);
+        })
+        .catch(err => alert('Failed to copy: ' + err));
+}
+</script>
+{% endblock %}
+
+{% endblock %}

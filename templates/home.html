@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text Generator</title>
+</head>
+<body>
+    <div class="container">
+        <h1>Text Generation</h1>
+        <form id="text-generation-form">
+            <!-- (Form fields remain the same) -->
+        </form>
+
+        <div class="generated-text">
+            <h2>Generated Text:</h2>
+            <p id="generated-text"></p>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('text-generation-form');
+        const generatedTextContainer = document.getElementById('generated-text');
+
+        form.addEventListener('submit', (event) => {
+            event.preventDefault();
+
+            const formData = new FormData(form);
+            const payload = {
+                text_input: formData.get('text_input'),
+                max_tokens: formData.get('max_tokens'),
+                bad_words: formData.get('bad_words'),
+                stop_words: formData.get('stop_words')
+            };
+
+            fetch('{% url "generate_text" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => response.json())
+            .then(data => {
+                generatedTextContainer.textContent = data.generated_text;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                generatedTextContainer.textContent = 'Error generating text.';
+            });
+        });
+    </script>
+</body>
+</html>

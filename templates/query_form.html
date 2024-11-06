@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">Financial Analysis Query</h3>
+                </div>
+                <div class="card-body">
+                    <form id="queryForm" method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Analysis Template</label>
+                            {{ form.template }}
+                            <div class="form-text">Select the type of analysis you want to perform</div>
+                        </div>
+
+                        <!-- Balance Sheet Fields -->
+                        <div id="balanceSheetFields" style="display: none;">
+                            <div class="mb-3">
+                                <label class="form-label">Company Name</label>
+                                {{ form.company_name }}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Period</label>
+                                {{ form.period }}
+                                <div class="form-text">e.g., Q4 2023 or FY 2023</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Assets</label>
+                                {{ form.assets_data }}
+                                <div class="form-text">Enter each item on a new line (e.g., Cash: $1,000,000)</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Liabilities</label>
+                                {{ form.liabilities_data }}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Equity</label>
+                                {{ form.equity_data }}
+                            </div>
+                        </div>
+
+                        <div id="parameters" class="mb-4">
+                            <label class="form-label fw-bold">Model Parameters</label>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label">Temperature</label>
+                                    {{ form.temperature }}
+                                    <div class="form-text text-center">
+                                        <span id="tempValue">0.7</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Max Tokens</label>
+                                    {{ form.max_tokens }}
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Top P</label>
+                                    {{ form.top_p }}
+                                    <div class="form-text text-center">
+                                        <span id="topPValue">0.95</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">
+                            Generate Analysis
+                            <span class="spinner-border spinner-border-sm d-none" role="status"></span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card mt-4" id="responseCard" style="display: none;">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">Analysis Result</h4>
+                </div>
+                <div class="card-body">
+                    <pre id="responseText" class="bg-light p-3 rounded"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const templateSelect = document.querySelector('[name="template"]');
+    const balanceSheetFields = document.getElementById('balanceSheetFields');
+
+    // Handle template selection
+    templateSelect.addEventListener('change', function() {
+        const selectedTemplate = templateSelect.options[templateSelect.selectedIndex].text;
+        if (selectedTemplate === 'Balance Sheet Analysis') {
+            balanceSheetFields.style.display = 'block';
+        } else {
+            balanceSheetFields.style.display = 'none';
+        }
+    });
+
+    // Range input display updates
+    document.querySelector('input[name="temperature"]').addEventListener('input', function() {
+        document.getElementById('tempValue').textContent = this.value;
+    });
+    
+    document.querySelector('input[name="top_p"]').addEventListener('input', function() {
+        document.getElementById('topPValue').textContent = this.value;
+    });
+
+    // Form submission
+    const form = document.getElementById('queryForm');
+    const responseCard = document.getElementById('responseCard');
+    const responseText = document.getElementById('responseText');
+    const spinner = document.querySelector('.spinner-border');
+
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        spinner.classList.remove('d-none');
+
+        try {
+            const formData = new FormData(this);
+            const data = {
+                template: formData.get('template'),
+                parameters: {
+                    temperature: parseFloat(formData.get('temperature')),
+                    max_tokens: parseInt(formData.get('max_tokens')),
+                    top_p: parseFloat(formData.get('top_p'))
+                },
+                input_data: {
+                    company_name: formData.get('company_name'),
+                    period: formData.get('period'),
+                    assets_data: formData.get('assets_data'),
+                    liabilities_data: formData.get('liabilities_data'),
+                    equity_data: formData.get('equity_data')
+                }
+            };
+
+            const response = await fetch('/query/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (result.status === 'success') {
+                responseText.textContent = JSON.stringify(result.response, null, 2);
+                responseCard.style.display = 'block';
+                responseCard.scrollIntoView({ behavior: 'smooth' });
+            } else {
+                alert('Error: ' + result.message);
+            }
+        } catch (error) {
+            alert('Error: ' + error.message);
+        } finally {
+            spinner.classList.add('d-none');
+        }
+    });
+});
+</script>
+{% endblock %}
+
+{% endblock %}

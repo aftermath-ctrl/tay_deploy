@@ -1,0 +1,12 @@
+asgiref==3.8.1
+Django==5.1.2
+psycopg2-binary==2.9.10
+sqlparse==0.5.1
+djangorestframework
+markdown
+django-filter
+requests
+beautifulsoup4
+pandas
+pydantic
+crispy-bootstrap5==0.6

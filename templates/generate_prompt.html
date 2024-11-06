@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Generate Prompt Response</title>
+</head>
+<body>
+    <h1>Generate a Response from Hermes 2B Pro</h1>
+
+    <!-- Form for user input -->
+    <form id="generate-form">
+        {% csrf_token %}
+        <label for="text_input">Text Input:</label><br>
+        <input type="text" id="text_input" name="text_input" required value="{{ request_data.text_input|default:'' }}"><br><br>
+
+        <label for="max_tokens">Max Tokens:</label><br>
+        <input type="number" id="max_tokens" name="max_tokens" value="{{ request_data.max_tokens|default:20 }}" required><br><br>
+
+        <label for="bad_words">Bad Words (comma-separated):</label><br>
+        <input type="text" id="bad_words" name="bad_words" value="{{ request_data.bad_words|default:'' }}"><br><br>
+
+        <label for="stop_words">Stop Words (comma-separated):</label><br>
+        <input type="text" id="stop_words" name="stop_words" value="{{ request_data.stop_words|default:'' }}"><br><br>
+
+        <button type="submit">Generate</button>
+    </form>
+
+    <!-- Display generated response here -->
+    <div id="response-container">
+        <h2>Generated Response:</h2>
+        <p id="response-text">{{ response|default:"No response generated yet." }}</p>
+    </div>
+
+    <!-- Axios script for sending data -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        document.getElementById('generate-form').addEventListener('submit', function(event) {
+            event.preventDefault();  // Prevent form from submitting traditionally
+
+            // Gather form data
+            const payload = {
+                text_input: document.getElementById('text_input').value,
+                max_tokens: parseInt(document.getElementById('max_tokens').value),
+                bad_words: document.getElementById('bad_words').value,
+                stop_words: document.getElementById('stop_words').value
+            };
+
+            // Send the data to the server using Axios
+            axios.post("{% url 'generate_response' %}", payload, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            })
+            .then(function(response) {
+                // Handle the successful response
+                document.getElementById('response-text').innerText = response.data.generated_text || "No text generated.";
+            })
+            .catch(function(error) {
+                // Handle any errors
+                console.error('Error:', error);
+                document.getElementById('response-text').innerText = "An error occurred while generating the response.";
+            });
+        });
+    </script>
+</body>
+</html>
