@@ -86,7 +86,7 @@ phases:
 
 
 
-
+ 
 
       - echo Deploying to EC2 instance...
 
