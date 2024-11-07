@@ -2,7 +2,7 @@ version: 0.2
 
 env:
   variables:
-     ECR_BASE_IMAGE: "public.ecr.aws/docker/library/python:3.10.4-slim-bullseye" 
+     ECR_BASE_IMAGE: "347385777102.dkr.ecr.us-east-1.amazonaws.com/python-slim-bullseye:latest" 
      
 
 
