@@ -70,18 +70,18 @@ phases:
 
       - chmod 400 .github/taybfrontend.pem
 
-      - ssh -o "StrictHostKeyChecking no" -i .github/taybfrontend.pem ubuntu@eec2-44-209-160-220.compute-1.amazonaws.com "aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 347385777102.dkr.ecr.us-east-1.amazonaws.com"
+      - ssh -o "StrictHostKeyChecking no" -i .github/taybfrontend.pem ubuntu@ec2-44-209-160-220.compute-1.amazonaws.com "aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 347385777102.dkr.ecr.us-east-1.amazonaws.com"
 
       - echo Stopping existing containers on the EC2 instance...
 
 
-      - ssh -o "StrictHostKeyChecking no" -i .github/taybfrontend.pem ubuntu@eec2-44-209-160-220.compute-1.amazonaws.com "docker stop \$(docker ps -a -q) || true"
+      - ssh -o "StrictHostKeyChecking no" -i .github/taybfrontend.pem ubuntu@ec2-44-209-160-220.compute-1.amazonaws.com "docker stop \$(docker ps -a -q) || true"
 
  
       # Remove existing containers
       - echo Removing existing containers on the EC2 instance...
 
-      - ssh -o "StrictHostKeyChecking no" -i .github/taybfrontend.pem ubuntu@eec2-44-209-160-220.compute-1.amazonaws.com "docker rm \$(docker ps -a -q) || true"
+      - ssh -o "StrictHostKeyChecking no" -i .github/taybfrontend.pem ubuntu@ec2-44-209-160-220.compute-1.amazonaws.com "docker rm \$(docker ps -a -q) || true"
 
 
 
@@ -91,7 +91,7 @@ phases:
       - echo Deploying to EC2 instance...
 
 
-      - ssh -o "StrictHostKeyChecking no" -i .github/taybfrontend.pem ubuntu@eec2-44-209-160-220.compute-1.amazonaws.com "docker pull 347385777102.dkr.ecr.us-east-1.amazonaws.com/tayberry:latest && cd /home/ubuntu && docker run -d -p 80:8000 347385777102.dkr.ecr.us-east-1.amazonaws.com/tayberry:latest"
+      - ssh -o "StrictHostKeyChecking no" -i .github/taybfrontend.pem ubuntu@ec2-44-209-160-220.compute-1.amazonaws.com "docker pull 347385777102.dkr.ecr.us-east-1.amazonaws.com/tayberry:latest && cd /home/ubuntu && docker run -d -p 80:8000 347385777102.dkr.ecr.us-east-1.amazonaws.com/tayberry:latest"
 
 
       #- aws ssm send-command --instance-ids i-05fcbe43b634cbd27 --document-name "AWS-RunShellScript" --comment "Stop containers" --parameters commands=["docker ps -q | xargs docker stop","docker system prune -f"]
