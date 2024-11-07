@@ -1,0 +1,164 @@
+version: 0.2
+
+env:
+  variables:
+     ECR_BASE_IMAGE: "public.ecr.aws/docker/library/python:3.10.4-slim-bullseye" 
+     
+
+
+phases:
+    
+  install:
+    #runtime-versions:
+      #docker: latest
+      #python: 3.10
+    commands:
+      - curl "https://s3.us-west-2.amazonaws.com/lightsailctl/latest/linux-amd64/lightsailctl" -o "lightsailctl"
+      - chmod +x ./lightsailctl
+      - mv lightsailctl /usr/local/bin/lightsailctl
+      - yum install -y awscli
+
+  pre_build:
+    commands:
+
+      - mkdir -p ~/.docker 
+
+      - cp .github/taybfrontend /tmp/taybfrontend
+
+      - chmod 400 /tmp/taybfrontend
+
+ 
+
+
+      - ECR_PASSWORD=$(aws ecr get-login-password --region us-east-1)
+
+      - echo $ECR_PASSWORD | docker login --username AWS --password-stdin 347385777102.dkr.ecr.us-east-1.amazonaws.com
+
+      - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 347385777102.dkr.ecr.us-east-1.amazonaws.com
+
+
+
+      - echo "Starting build..."
+      #- $(aws ecr get-login --no-include-email --region us-east-1)
+      - docker pull $ECR_BASE_IMAGE
+
+  build:
+    commands:
+      - docker build -t tayberry --cache-from $ECR_BASE_IMAGE .
+
+      - echo "Tagging Docker image for ECR..."
+
+      - docker tag tayberry:latest 347385777102.dkr.ecr.us-east-1.amazonaws.com/tayberry:latest
+
+      
+
+  post_build:
+    commands:
+      - echo "Build completed."
+
+
+      - echo "Pushing Docker image to ECR..."
+
+      - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 347385777102.dkr.ecr.us-east-1.amazonaws.com
+
+      - docker push 347385777102.dkr.ecr.us-east-1.amazonaws.com/tayberry:latest
+
+      # Stop and remove existing containers on EC2
+
+
+# SSH into the EC2 instance and execute commands
+
+      - chmod 400 .github/taybfrontend
+
+      - ssh -o "StrictHostKeyChecking no" -i .github/taybfrontend ubuntu@eec2-44-209-160-220.compute-1.amazonaws.com "aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 347385777102.dkr.ecr.us-east-1.amazonaws.com"
+
+      - echo Stopping existing containers on the EC2 instance...
+
+
+      - ssh -o "StrictHostKeyChecking no" -i .github/taybfrontend ubuntu@eec2-44-209-160-220.compute-1.amazonaws.com "docker stop \$(docker ps -a -q) || true"
+
+ 
+      # Remove existing containers
+      - echo Removing existing containers on the EC2 instance...
+
+      - ssh -o "StrictHostKeyChecking no" -i .github/taybfrontend ubuntu@eec2-44-209-160-220.compute-1.amazonaws.com "docker rm \$(docker ps -a -q) || true"
+
+
+
+
+
+
+      - echo Deploying to EC2 instance...
+
+
+      - ssh -o "StrictHostKeyChecking no" -i .github/taybfrontend ubuntu@eec2-44-209-160-220.compute-1.amazonaws.com "docker pull 347385777102.dkr.ecr.us-east-1.amazonaws.com/tayberry:latest && cd /home/ubuntu && docker run -d -p 80:8000 347385777102.dkr.ecr.us-east-1.amazonaws.com/tayberry:latest"
+
+
+      #- aws ssm send-command --instance-ids i-05fcbe43b634cbd27 --document-name "AWS-RunShellScript" --comment "Stop containers" --parameters commands=["docker ps -q | xargs docker stop","docker system prune -f"]
+
+# Pull and run new container on EC2
+
+      #- echo "Pulling docker image..."
+
+
+      #- aws ssm send-command --instance-ids i-05fcbe43b634cbd27 --document-name "AWS-RunShellScript" --comment "Deploy new container" --parameters commands=["docker pull 347385777102.dkr.ecr.us-east-1.amazonaws.com/tayberry:latest"]
+
+      #- echo "Running new container..."
+
+      #- aws ssm send-command --instance-ids i-05fcbe43b634cbd27 --document-name "AWS-RunShellScript" --comment "Run new container" --parameters commands=["docker run -d -p 8000:8000 347385777102.dkr.ecr.us-east-1.amazonaws.com/tayberry"]
+
+
+      #- echo "Checking SSM command execution status..."
+      #- aws ssm list-command-invocations --instance-id i-05fcbe43b634cbd27 --details
+
+
+      #- printf '[{"image":"%s"}]' 347385777102.dkr.ecr.us-east-1.amazonaws.com/tayberry:latest > imagedefinitions.json
+
+            # Set correct permissions for Lightsail SSH key
+
+
+
+
+
+   
+
+
+
+   # Deploy to Lightsail
+
+
+     
+
+        #
+
+      #- ssh-keyscan -H admin@172.31.18.110 >> ~/.ssh/known_hosts
+
+      
+
+
+      #- scp -o StrictHostKeyChecking=no -i .github/taybfrontend ~/.docker/config.json admin@ec2-3-89-66-20.compute-1.amazonaws.com:~/.docker/config.json
+
+
+
+      #- ssh -o StrictHostKeyChecking=no -i .github/taybfrontend admin@ec2-3-89-66-20.compute-1.amazonaws.com "docker pull 347385777102.dkr.ecr.us-east-1.amazonaws.com/tayberry:latest && docker run -d -p 80:8000 347385777102.dkr.ecr.us-east-1.amazonaws.com/tayberry:latest"
+    
+
+
+      #- scp -o StrictHostKeyChecking=no -i .github/taybfrontend docker-compose.yml admin@ec2-3-89-66-20.compute-1.amazonaws.com:/home/admin/tayberry/afmplace_final
+      #- ssh -o StrictHostKeyChecking=no -i .github/taybfrontend admin@ec2-3-89-66-20.compute-1.amazonaws.com 'docker-compose -f /home/admin/tayberry/afmplace_final/docker-compose.yml pull && docker-compose -f /home/admin/tayberry/afmplace_final/docker-compose.yml up -d'
+
+      #- aws lightsail push-container-image --service-name afm --label imagedefinitions.json  --image tayberry:latest
+
+      - echo App deployed!
+
+      
+
+artifacts:
+  files:
+    - deploy.sh
+   # - imagedefinitions.json
+
+
+
+
+
