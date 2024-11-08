@@ -5,7 +5,7 @@ env:
      ECR_BASE_IMAGE: "347385777102.dkr.ecr.us-east-1.amazonaws.com/python-slim-bullseye:latest" 
      
 
-
+ 
 phases:
     
   install:
