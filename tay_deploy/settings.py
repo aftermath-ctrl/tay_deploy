@@ -44,7 +44,7 @@ ENVIRONMENT = os.environ.get('ENVIRONMENT', default='development')
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['44.209.160.220','0.0.0.0','localhost', 'ec2-44-209-160-220.compute-1.amazonaws.com','tayberryai.com']
+ALLOWED_HOSTS = ['44.209.160.220','0.0.0.0','localhost','172.31.90.245', 'ec2-44-209-160-220.compute-1.amazonaws.com','tayberryai.com']
 
 
 # Application definition
@@ -201,15 +201,15 @@ WHITENOISE_MANIFEST_STRICT = False
 
 if ENVIRONMENT == 'production':
     SECURE_BROWSER_XSS_FILTER = True
-    X_FRAME_OPTIONS = 'DENY'
-    SECURE_SSL_REDIRECT = True
-    SECURE_HSTS_SECONDS = 3600
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+   # X_FRAME_OPTIONS = 'DENY'
+    #SECURE_SSL_REDIRECT = True
+    #SECURE_HSTS_SECONDS = 3600
+   ## SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     SESSION_COOKIE_SECURE = True # new
-    CSRF_COOKIE_SECURE = True # new
-    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https') # new
+   # CSRF_COOKIE_SECURE = True # new
+    #SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https') # new
 
 
 import socket
