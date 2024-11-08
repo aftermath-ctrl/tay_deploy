@@ -44,7 +44,7 @@ ENVIRONMENT = os.environ.get('ENVIRONMENT', default='development')
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['44.209.160.220','0.0.0.0','localhost','172.31.90.245', 'ec2-44-209-160-220.compute-1.amazonaws.com','tayberryai.com']
+ALLOWED_HOSTS = ['44.209.160.220','0.0.0.0','localhost', 'ec2-44-209-160-220.compute-1.amazonaws.com','tayberryai.com']
 
 
 # Application definition
@@ -195,6 +195,9 @@ CRISPY_TEMPLATE_PACK = "bootstrap5" # new
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+CSRF_TRUSTED_ORIGINS = ['https://tayberryai.com']
+
 
 
 WHITENOISE_MANIFEST_STRICT = False
