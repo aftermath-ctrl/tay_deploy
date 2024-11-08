@@ -44,7 +44,7 @@ ENVIRONMENT = os.environ.get('ENVIRONMENT', default='development')
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1','0.0.0.0','localhost', 'tayberryai.com']
+ALLOWED_HOSTS = ['44.209.160.220','0.0.0.0','localhost', 'ec2-44-209-160-220.compute-1.amazonaws.com','tayberryai.com']
 
 
 # Application definition
@@ -160,6 +160,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
