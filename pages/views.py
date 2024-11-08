@@ -145,7 +145,7 @@ def chat_history(request):
 
 def index(request):
     form = TextGenerationForm()
-    return render(request, 'index.html', {'form': form})
+    return render(request, '../templates/index.html', {'form': form})
 
 
 class HomePageView(TemplateView):
