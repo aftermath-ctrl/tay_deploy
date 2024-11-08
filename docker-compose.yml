@@ -13,7 +13,7 @@ services:
       - POSTGRES_USER=dbmasteruser
 
       
-  web:
+  tay_web:
     build: .
     command: gunicorn tay_deploy.wsgi -b 0.0.0.0:8000
     #command: python3 /tayber/tay_deploy/manage.py runserver 0.0.0.0:8000
@@ -44,13 +44,13 @@ services:
       - ./staticfiles:/staticfiles
 
       - ./media:/mediafiles
-      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+      #- ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
 
 
     ports:
       - "80:80"
     depends_on:
-      - web
+      - tay_web
 
     restart: always
 
