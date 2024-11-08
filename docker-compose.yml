@@ -15,8 +15,8 @@ services:
       
   web:
     build: .
-    #command: gunicorn aInc.wsgi -b 0.0.0.0:8000
-    command: python3 /tayber/tay_deploy/manage.py runserver 0.0.0.0:8000
+    command: gunicorn tay_deploy.wsgi -b 0.0.0.0:8000
+    #command: python3 /tayber/tay_deploy/manage.py runserver 0.0.0.0:8000
 
     environment:
       - ENVIRONMENT=production
