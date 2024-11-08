@@ -44,7 +44,8 @@ phases:
 
   build:
     commands:
-      - docker build -t tayberry --cache-from $ECR_BASE_IMAGE .
+      #- docker build -t tayberry --cache-from $ECR_BASE_IMAGE .
+      - docker build --cache-from $ECR_BASE_IMAGE -t tayberry .
 
       - echo "Tagging Docker image for ECR..."
 
