@@ -1,0 +1,657 @@
+
+{% load static %}
+{% load crispy_forms_tags %}
+
+<!DOCTYPE html>
+
+<!--
+ // WEBSITE: https://themefisher.com
+ // TWITTER: https://twitter.com/themefisher
+ // FACEBOOK: https://www.facebook.com/themefisher
+ // GITHUB: https://github.com/themefisher/
+-->
+
+<html lang="en-us">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
+    <meta name="description" content="This is meta description">
+    <meta name="author" content="Themefisher">
+    <link rel="shortcut icon" href="images/favicon.png" type="image/x-icon">
+    <link rel="icon" href="images/favicon.png" type="image/x-icon">
+
+    <!-- # Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <!-- # CSS Plugins -->
+    <link rel="stylesheet" href="{% static '/wallet/theme/plugins/slick/slick.css' %}">
+    <link rel="stylesheet" href="{% static '/wallet/theme/plugins/font-awesome/fontawesome.min.css' %}">
+    <link rel="stylesheet" href="{% static '/wallet/theme/plugins/font-awesome/brands.css' %}">
+    <link rel="stylesheet" href="{% static '/wallet/theme/plugins/font-awesome/solid.css' %}">
+
+    <!-- # Main Style Sheet -->
+    <link rel="stylesheet" href="{% static '/wallet/theme/css/style.css' %}">
+     <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-HM55VZVLK3"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-HM55VZVLK3');
+    </script>
+
+    <style>
+        /* Page and form styles */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7fc;
+            color: #333;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .navbar {
+            background-color: #ffffff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 1rem 2rem;
+            margin-bottom: 20px;
+        }
+
+        .auth-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            border-radius: 8px;
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+
+        .remaining-prompts {
+            padding: 8px 12px;
+            background-color: #e7f7fe;
+            border-radius: 4px;
+            font-size: 0.9em;
+            display: inline-block;
+        }
+
+        .chat-container, .form-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .chat-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            height: 60vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            overflow-y: auto;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 8px;
+            max-width: 80%;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .user-message {
+            background-color: #d9fdd3;
+            align-self: flex-end;
+        }
+
+        .ai-message {
+            background-color: #e7f7fe;
+            align-self: flex-start;
+        }
+
+        .typing-cursor {
+            display: inline-block;
+            width: 0.5em;
+            height: 1.2em;
+            background-color: #333;
+            margin-left: 2px;
+            animation: blink 1s step-end infinite;
+        }
+
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .modal-content h3 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .modal button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .sign-in-btn {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .sign-up-btn {
+            background-color: #2196F3;
+            color: white;
+        }
+
+        .form-container {
+            max-width: 800px;
+            margin: 20px auto 0;
+            position: relative;
+        }
+
+        #loading-spinner {
+            visibility: hidden;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4CAF50;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            z-index: 10;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .visible {
+            display: block;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        #submitButton {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        #submitButton i {
+            font-size: 1.1em;
+        }
+
+        #submitButton:hover {
+            background-color: #45a049;
+            transform: translateY(-2px);
+        }
+
+        #submitButton:active {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- navigation -->
+<header class="navigation bg-tertiary">
+    <nav class="navbar navbar-expand-xl navbar-light text-center py-3">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">
+                <img loading="prelaod" decoding="async" class="img-fluid" width="160" src="images/logo.png" alt="Wallet">
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"> <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
+                              <div class="auth-links">
+                {% if user.is_authenticated %}
+                <span class="me-3">Welcome, {{ user.username }}</span>
+                <a class="btn btn-outline-primary" href="{% url 'account_logout' %}">Log Out</a>
+                {% else %}
+                <a class="btn btn-outline-primary me-2" href="{% url 'account_login' %}">Log In</a>
+                <a class="btn btn-primary" href="{% url 'account_signup' %}">Sign Up</a>
+                {% endif %}
+            </div>
+ 
+                </ul>
+             
+            </div>
+        </div>
+    </nav>
+</header>
+<!-- /navigation -->
+
+
+
+<div class="section">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-10">
+       
+      
+        <div class="content">
+       
+
+           <!-- Auth Status and Remaining Prompts -->
+    <div class="container">
+        <div class="auth-status">
+            {% if user.is_authenticated %}
+            <i class="fas fa-check-circle text-success"></i>
+            <span>Unlimited prompts available</span>
+            {% else %}
+            <div id="remainingPrompts" class="remaining-prompts">
+                <i class="fas fa-info-circle"></i>
+                <span>Loading remaining prompts...</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="chat-container" id="chatContainer"></div>
+
+    <div class="form-container">
+        <div id="loading-spinner" class="hidden"></div>
+        <form id="generationForm">
+            {% csrf_token %}
+            {{ form|crispy }}
+            <button type="submit" id="submitButton">
+                <i class="fas fa-paper-plane"></i> Submit
+            </button>
+        </form>
+    </div>
+
+    <!-- Sign In Modal -->
+    <div class="modal" id="signInModal">
+        <div class="modal-content">
+            <h3>Prompt Limit Reached</h3>
+            <p>You have reached the limit of 5 prompts. Sign in or create an account for unlimited access.</p>
+            <div class="modal-buttons">
+                <button class="sign-in-btn" onclick="window.location.href='{% url 'account_login' %}'">
+                    Sign In
+                </button>
+                <button class="sign-up-btn" onclick="window.location.href='{% url 'account_signup' %}'">
+                    Sign Up
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const chatContainer = document.getElementById('chatContainer');
+        const form = document.getElementById('generationForm');
+        const submitButton = document.getElementById('submitButton');
+        const signInModal = document.getElementById('signInModal');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const remainingPromptsElement = document.getElementById('remainingPrompts');
+
+        // Check remaining prompts on page load for anonymous users
+        {% if not user.is_authenticated %}
+        async function checkRemainingPrompts() {
+            try {
+                const response = await fetch("{% url 'check_remaining_prompts' %}");
+                const data = await response.json();
+                if (remainingPromptsElement) {
+                    remainingPromptsElement.innerHTML = `
+                        <i class="fas fa-info-circle"></i>
+                        <span>${data.remaining_prompts} prompts remaining</span>
+                    `;
+                }
+            } catch (error) {
+                console.error("Error checking remaining prompts:", error);
+            }
+        }
+        checkRemainingPrompts();
+        {% endif %}
+
+        async function typeMessage(element, text, speed = 30) {
+            const cursor = document.createElement('span');
+            cursor.classList.add('typing-cursor');
+            element.appendChild(cursor);
+
+            for (let i = 0; i < text.length; i++) {
+                element.insertBefore(document.createTextNode(text[i]), cursor);
+                await new Promise(resolve => setTimeout(resolve, speed));
+            }
+            cursor.remove();
+
+            form.classList.remove('hidden');
+            loadingSpinner.classList.add('hidden');
+        }
+
+        function addMessage(content, isUser = true) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message', isUser ? 'user-message' : 'ai-message');
+            chatContainer.appendChild(messageElement);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            if (isUser) {
+                messageElement.textContent = content;
+            } else {
+                typeMessage(messageElement, content);
+            }
+        }
+
+        function showSignInPopup() {
+            signInModal.style.display = 'flex';
+        }
+
+        form.addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            const formData = new FormData(form);
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            form.classList.add('hidden');
+            loadingSpinner.classList.remove('hidden');
+            loadingSpinner.classList.add('visible');
+
+            const userInput = formData.get('text_input');
+            addMessage(userInput, true);
+
+            try {
+                const response = await fetch("{% url 'handle_post' %}", {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': csrfToken },
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.status === 403 && data.error === "prompt_limit_reached") {
+                    showSignInPopup();
+                    return;
+                }
+
+                if (data.result_text) {
+                    addMessage(data.result_text, false);
+                    form.reset();
+
+                    // Update remaining prompts for anonymous users
+                    {% if not user.is_authenticated %}
+                    if (data.remaining_prompts !== null && !isNaN(data.remaining_prompts)) {
+                        remainingPromptsElement.innerHTML = `
+                            <i class="fas fa-info-circle"></i>
+                            <span>${data.remaining_prompts} prompts remaining</span>
+                        `;
+                    }
+                    {% endif %}
+                } else if (data.error) {
+                    addMessage(`Error: ${data.error}`, false);
+                } else if (data.errors) {
+                    addMessage(`Form errors: ${JSON.stringify(data.errors)}`, false);
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                addMessage("An error occurred while processing your request.", false);
+            } finally {
+                loadingSpinner.classList.remove('visible');
+                loadingSpinner.classList.add('hidden');
+                form.classList.remove('hidden');
+            }
+        });
+
+        form.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                submitButton.click();
+            }
+        });
+    </script>
+
+    
+         
+          <hr>
+          <h5 id="ordered-list">Ordered List</h5>
+          <ol>
+            <li>List item</li>
+            <li>List item</li>
+            <li>List item</li>
+            <li>List item</li>
+            <li>List item</li>
+          </ol>
+          <hr>
+          <h5 id="unordered-list">Unordered List</h5>
+          <ul>
+            <li>List item</li>
+            <li>List item</li>
+            <li>List item</li>
+            <li>List item</li>
+            <li>List item</li>
+          </ul>
+          <hr>
+          <h4 id="notice">Notice</h4>
+          <div class="notices note">
+            <p>This is a simple note.</p>
+          </div>
+          <div class="notices tip">
+            <p>This is a simple tip.</p>
+          </div>
+          <div class="notices info">
+            <p>This is a simple info.</p>
+          </div>
+          <hr>
+          <h4 id="tab">Tab</h4>
+          <div class="code-tabs">
+            <ul class="nav nav-tabs"></ul>
+            <div class="tab-content">
+              <div class="tab-pane" title="first">This is first tab</div>
+              <div class="tab-pane" title="second">this is second tab</div>
+              <div class="tab-pane" title="third">this is third tab</div>
+            </div>
+          </div>
+          <hr>
+          <h3 id="collapse">Collapse</h3>
+          <div class="accordion accordion-wrapper">
+            <div class="accordion-item mb-1">
+              <h2 class="accordion-header accordion-button h5 fw-normal border-0 mt-4 p-0 text-capitalize"
+                id="heading-collapse-1" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-collapse-1"
+                aria-controls="collapse-collapse-1">collapse 1
+              </h2>
+              <div id="collapse-collapse-1" class="accordion-collapse collapse" aria-labelledby="heading-collapse-1">
+                <div class="accordion-body p-0 pt-2 content">This is a simple collapse</div>
+              </div>
+            </div>
+          </div>
+          <div class="accordion accordion-wrapper">
+            <div class="accordion-item mb-1">
+              <h2 class="accordion-header accordion-button h5 fw-normal border-0 mt-4 p-0 text-capitalize"
+                id="heading-collapse-2" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-collapse-2"
+                aria-controls="collapse-collapse-2">collapse 2
+              </h2>
+              <div id="collapse-collapse-2" class="accordion-collapse collapse" aria-labelledby="heading-collapse-2">
+                <div class="accordion-body p-0 pt-2 content">This is a simple collapse</div>
+              </div>
+            </div>
+          </div>
+          <div class="accordion accordion-wrapper">
+            <div class="accordion-item mb-1">
+              <h2 class="accordion-header accordion-button h5 fw-normal border-0 mt-4 p-0 text-capitalize"
+                id="heading-collapse-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-collapse-3"
+                aria-controls="collapse-collapse-3">collapse 3
+              </h2>
+              <div id="collapse-collapse-3" class="accordion-collapse collapse" aria-labelledby="heading-collapse-3">
+                <div class="accordion-body p-0 pt-2 content">This is a simple collapse</div>
+              </div>
+            </div>
+          </div>
+          <hr>
+          <h5 id="blockquote">Blockquote</h5>
+          <blockquote>
+            <p>This is a blockquote example.</p>
+          </blockquote>
+          <hr>
+          <h5 id="tables">Tables</h5>
+          <p>Colons can be used to align columns.</p>
+          <table>
+            <thead>
+              <tr>
+                <th>Tables</th>
+                <th style="text-align:center">Are</th>
+                <th style="text-align:right">Cool</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>col 3 is</td>
+                <td style="text-align:center">right-aligned</td>
+                <td style="text-align:right">$1600</td>
+              </tr>
+              <tr>
+                <td>col 2 is</td>
+                <td style="text-align:center">centered</td>
+                <td style="text-align:right">$12</td>
+              </tr>
+              <tr>
+                <td>zebra stripes</td>
+                <td style="text-align:center">are neat</td>
+                <td style="text-align:right">$1</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>There must be at least 3 dashes separating each header cell. The outer pipes (|) are optional, and you
+            don&rsquo;t need to make the raw Markdown line up prettily. You can also use inline Markdown.</p>
+          <table>
+            <thead>
+              <tr>
+                <th>Markdown</th>
+                <th>Less</th>
+                <th>Pretty</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><em>Still</em>
+                </td>
+                <td><code>renders</code>
+                </td>
+                <td><strong>nicely</strong>
+                </td>
+              </tr>
+              <tr>
+                <td>1</td>
+                <td>2</td>
+                <td>3</td>
+              </tr>
+            </tbody>
+          </table>
+          <hr>
+          <h5 id="image">Image</h5>
+          <p>
+            <img loading="lazy" decoding="async" class="w-100 d-block mb-4" src="images/blog/post-4.jpg"
+              alt="placeholder image">
+            <img loading="lazy" decoding="async" class="w-100 d-block mb-4"
+              src="https://dummyimage.com/1100x500/e8e8e8/16161a.jpg" alt="placeholder image">
+          </p>
+          <hr>
+        
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="section-sm bg-tertiary">
+    <div class="container">
+        <div class="row justify-content-between">
+            <div class="col-lg-2 col-md-4 col-6 mb-4">
+              
+            </div>
+         
+          
+
+        </div>
+        <div class="row align-items-center mt-5 text-center text-md-start">
+            <div class="col-lg-4">
+        <a href="index.html">
+          <img loading="prelaod" decoding="async" class="img-fluid" width="160" src="images/logo.png" alt="Wallet">
+        </a>
+            </div>
+            <div class="col-lg-4 col-md-6 mt-4 mt-lg-0">
+                <ul class="list-unstyled list-inline mb-0 text-lg-center">
+                    <li class="list-inline-item me-4"><a class="text-black" href="privacy-policy.html">Privacy Policy</a>
+                    </li>
+                    <li class="list-inline-item me-4"><a class="text-black" href="terms.html">Terms &amp; Conditions</a>
+                    </li>
+                </ul>
+            </div>
+            <div class="col-lg-4 col-md-6 text-md-end mt-4 mt-md-0">
+                <ul class="list-unstyled list-inline mb-0 social-icons">
+                    <li class="list-inline-item me-3"><a title="Explorer Facebook Profile" class="text-black" href="https://facebook.com/"><i class="fab fa-facebook-f"></i></a>
+                    </li>
+                    <li class="list-inline-item me-3"><a title="Explorer Twitter Profile" class="text-black" href="https://twitter.com/"><i class="fab fa-twitter"></i></a>
+                    </li>
+                    <li class="list-inline-item me-3"><a title="Explorer Instagram Profile" class="text-black" href="https://instagram.com/"><i class="fab fa-instagram"></i></a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</footer>
+
+
+<!-- # JS Plugins -->
+<script src="{% static '/wallet/theme/plugins/jquery/jquery.min.js' %}"></script>
+<script src="{% static '/wallet/theme/plugins/bootstrap/bootstrap.min.js' %}"></script>
+<script src="{% static '/wallet/theme/plugins/slick/slick.min.js' %}"></script>
+<script src="{% static '/wallet/theme/plugins/scrollmenu/scrollmenu.min.js' %}"></script>
+
+<!-- Main Script -->
+<script src="{% static '/wallet/theme/js/script.js' %}"></script>
+
+</body>
+</html>

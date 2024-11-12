@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="author" content="Untree.co">
+  <link rel="shortcut icon" href="favicon.png">
+
+  <meta name="description" content="" />
+  <meta name="keywords" content="bootstrap, bootstrap4" />
+
+  <!-- Bootstrap CSS -->
+  <link href="{% static 'fur/css/bootstrap.min.css' %}" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <link href="{% static '/fur/css/tiny-slider.css' %}" rel="stylesheet">
+  <link href="{% static '/fur/css/style.css' %}" rel="stylesheet">
+  <title>tayberryai</title>
+  <link href="{% static '/fur/afmplace.png' %}" rel="icon">
+  
+  <style>
+    /* Custom styling for the Google login button */
+    .google-btn {
+      background-color: #ffffff;
+      border: 1px solid #4285f4;
+      color: #4285f4;
+      font-weight: bold;
+    }
+    .google-btn:hover {
+      background-color: #f8f9fa;
+      border-color: #357ae8;
+      color: #357ae8;
+    }
+    .google-btn i {
+      color: #4285f4;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container mt-5 d-flex justify-content-center align-items-center" style="min-height: 100vh;">
+    <div class="col-md-6 p-5 rounded shadow" style="background-color: #f8f9fa;">
+        <h2>Sign Up</h2>
+    <form method="post" action="{% url 'account_signup' %}">
+        {% csrf_token %}
+        {{ form|crispy }}
+        <button type="submit" class="btn btn-primary mt-3">Sign Up</button>
+    </form>
+    </div>
+  </div>
+
+  <!-- End Footer Section --> 
+
+  <script src="{% static '/fur/js/bootstrap.bundle.min.js' %}"></script>
+  <script src="{% static '/fur/js/tiny-slider.js' %}"></script>
+  <script src="{% static '/fur/js/custom.js' %}"></script>
+</body>
+</html>
+{% endblock %}

@@ -71,8 +71,8 @@ INSTALLED_APPS = [
 
 SITE_ID = 1
 
-LOGIN_REDIRECT_URL = "home"
-ACCOUNT_LOGOUT_REDIRECT = "home" # new
+LOGIN_REDIRECT_URL = "index"
+ACCOUNT_LOGOUT_REDIRECT = "index" # new
 
 AUTHENTICATION_BACKENDS = (
     "django.contrib.auth.backends.ModelBackend",
@@ -198,7 +198,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CSRF_TRUSTED_ORIGINS = ['https://tayberryai.com']
 
-
+ACCOUNT_USERNAME_REQUIRED = False # new
+ACCOUNT_AUTHENTICATION_METHOD = "email" # new
+ACCOUNT_EMAIL_REQUIRED = True # new
+ACCOUNT_UNIQUE_EMAIL = True # new
+ 
 
 WHITENOISE_MANIFEST_STRICT = False
 

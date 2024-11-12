@@ -69,7 +69,7 @@ from django.views.decorators.csrf import csrf_protect
 
  
 @csrf_protect
-def handle_post(request):
+def handle_post2(request):
     if request.method == "POST":
         form = TextGenerationForm(request.POST)
         if form.is_valid():
@@ -135,6 +135,11 @@ def handle_post(request):
         return JsonResponse({"errors": form.errors}, status=400)
     return JsonResponse({"error": "Invalid request"}, status=400)
 
+
+
+
+
+
 def chat_history(request):
     if request.method == "GET":
         chat_logs = ChatHistory.objects.order_by('-timestamp')
@@ -152,3 +157,112 @@ class HomePageView(TemplateView):
 	template_name = "home.html"
 
 
+from django.shortcuts import render
+
+
+
+from django.views.decorators.csrf import csrf_protect
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+from django.core.cache import cache
+import requests
+
+@csrf_protect
+def handle_post(request):
+    if request.method == "POST":
+        # Check authentication status and handle rate limiting for anonymous users
+        if not request.user.is_authenticated:
+            client_ip = request.META.get('REMOTE_ADDR')
+            cache_key = f'prompt_count_{client_ip}'
+            prompt_count = cache.get(cache_key, 0)
+            
+            if prompt_count >= 5:
+                return JsonResponse({
+                    "error": "prompt_limit_reached",
+                    "message": "You have reached the limit of 5 prompts. Please sign in to continue."
+                }, status=403)
+            
+            # Increment prompt count for anonymous users
+            cache.set(cache_key, prompt_count + 1, timeout=86400)  # 24 hour timeout
+
+        form = TextGenerationForm(request.POST)
+        if form.is_valid():
+            # Extract form data
+            text_input = form.cleaned_data['text_input']
+            max_tokens = form.cleaned_data['max_tokens']
+            bad_words = form.cleaned_data['bad_words']
+            stop_words = form.cleaned_data['stop_words']
+            pad_id = form.cleaned_data['pad_id']
+            end_id = form.cleaned_data['end_id']
+            
+            payload = {
+                "text_input": text_input,
+                "max_tokens": max_tokens,
+                "bad_words": bad_words,
+                "stop_words": stop_words,
+                "pad_id": pad_id,
+                "end_id": end_id
+            }
+            
+            try:
+                response = requests.post(
+                    "http://54.204.29.1:8000/v2/models/llama-2-7b/generate",
+                    json=payload,
+                )
+                response.raise_for_status()
+                response_data = response.json()
+                
+                if 'text_output' in response_data:
+                    # Get the response text
+                    result_text = response_data['text_output']
+                    
+                    # Remove the input question
+                    result_text = result_text.replace(text_input, '')
+                    
+                    # Clean up formatting
+                    result_text = result_text.strip()  # Remove leading/trailing whitespace
+                    result_text = result_text.replace('\n', ' ')  # Replace newlines with spaces
+                    
+                    # Split by period and take the first complete sentence
+                    sentences = result_text.split('.')
+                    result_text = sentences[0].strip() + '.'
+                    
+                    # Save the chat history with user association if authenticated
+                    chat_history = ChatHistory.objects.create(
+                        user_input=text_input,
+                        bot_response=result_text,
+                        user=request.user if request.user.is_authenticated else None
+                    )
+                    
+                    if not result_text:  # If empty after cleaning
+                        result_text = "No additional text generated."
+                else:
+                    result_text = "No generated text found."
+                    
+                return JsonResponse({
+                    "result_text": result_text,
+                    "remaining_prompts": None if request.user.is_authenticated else 
+                        5 - (cache.get(f'prompt_count_{request.META.get("REMOTE_ADDR")}', 1))
+                })
+                
+            except requests.RequestException as e:
+                print("Error calling the model API:", e)
+                return JsonResponse({"error": "Failed to generate text from model API"}, status=500)
+                
+        print("Form Errors:", form.errors)
+        return JsonResponse({"errors": form.errors}, status=400)
+    return JsonResponse({"error": "Invalid request"}, status=400)
+
+# Optional helper view to check remaining prompts
+def check_remaining_prompts(request):
+    if request.user.is_authenticated:
+        return JsonResponse({"unlimited": True})
+    
+    client_ip = request.META.get('REMOTE_ADDR')
+    prompt_count = cache.get(f'prompt_count_{client_ip}', 0)
+    remaining = max(5 - prompt_count, 0)
+    
+    return JsonResponse({
+        "remaining_prompts": remaining,
+        "total_allowed": 5
+    })

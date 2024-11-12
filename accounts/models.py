@@ -3,7 +3,7 @@ from django.db import models
 # Create your models here.
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth import get_user_model
-
+from django.conf import settings
 
 class CustomUser(AbstractUser):
 	is_customer = models.BooleanField(default=True)
@@ -302,6 +302,7 @@ class TextGenerationRequest(models.Model):
         return f"Request: {self.text_input[:50]}..."
 
 class ChatHistory(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True,blank=True)
     user_input = models.TextField()
     bot_response = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)

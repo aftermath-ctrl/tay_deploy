@@ -1,0 +1,339 @@
+{% load static %}
+
+{% load crispy_forms_tags %}
+
+
+
+
+{% if user.is_authenticated %}
+<li class="nav-item">
+<a class="nav-link" href="{% url 'account_logout' %}">Log Out</a>
+</li>
+{% else %}
+<li class="nav-item">
+<a class="nav-link" href="{% url 'account_login' %}">Log In</a>
+</li>
+<li class="nav-item">
+<a class="nav-link" href="{% url 'account_signup' %}">Sign Up</a>
+</li>
+{% endif %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- Bootstrap CSS -->
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css..."\>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Bootstrap CSS -->
+    <link href="{% static 'fur/css/bootstrap.min.css' %}" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link href="{% static 'fur/css/tiny-slider.css' %}" rel="stylesheet">
+    <link href="{% static 'fur/css/style.css' %}" rel="stylesheet">
+    <title>tayberry</title>
+    <link href="{% static 'fur/tayberryAI-.png' %}" rel="icon">
+
+
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-HM55VZVLK3"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-HM55VZVLK3');
+</script>
+
+    <style>
+        /* Page and form styles */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7fc;
+            color: #333;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .chat-container, .form-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .chat-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            height: 80vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            overflow-y: auto;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 8px;
+            max-width: 80%;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .user-message {
+            background-color: #d9fdd3;
+            align-self: flex-end;
+        }
+
+        .ai-message {
+            background-color: #e7f7fe;
+            align-self: flex-start;
+        }
+
+        .typing-cursor {
+            display: inline-block;
+            width: 0.5em;
+            height: 1.2em;
+            background-color: #333;
+            margin-left: 2px;
+            animation: blink 1s step-end infinite;
+        }
+
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+
+        /* Sign-in popup styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .modal button {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        /* Hide CSRF token field */
+        input[name="csrfmiddlewaretoken"] {
+            display: none;
+        }
+
+        .form-container {
+            max-width: 800px;
+            margin: 20px auto 0;
+            position: relative;
+        }
+
+        #loading-spinner {
+            visibility: hidden;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4CAF50;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            z-index: 10;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .visible {
+            display: block;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        #submitButton {
+    background-color: #4CAF50; /* Green color */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+    }
+
+    #submitButton i {
+        font-size: 1.1em;
+    }
+
+    #submitButton:hover {
+        background-color: #45a049; /* Darker green on hover */
+        transform: translateY(-2px); /* Lift effect on hover */
+    }
+
+    #submitButton:active {
+        transform: translateY(0); /* Reset lift on click */
+    }
+
+    </style>
+</head>
+<body>
+    <div class="chat-container" id="chatContainer"></div>
+
+    <div class="form-container">
+        <div id="loading-spinner" class="hidden"></div>
+        
+        <form id="generationForm">
+            {% csrf_token %}
+            {{ form|crispy }}
+            <button type="submit" id="submitButton">
+             <i class="fas fa-paper-plane"></i> Submit
+
+            </button>
+        </form>
+    </div>
+    <div class="modal" id="signInModal">
+        <div class="modal-content">
+            <p>You have reached the limit of 5 prompts. Please sign in to continue.</p>
+            <button onclick="redirectToSignIn()">Sign In</button>
+        </div>
+    </div>
+
+    <script>
+        const chatContainer = document.getElementById('chatContainer');
+        const form = document.getElementById('generationForm');
+        const submitButton = document.getElementById('submitButton');
+        const signInModal = document.getElementById('signInModal');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        let promptCount = 0;
+
+        async function typeMessage(element, text, speed = 30) {
+            const cursor = document.createElement('span');
+            cursor.classList.add('typing-cursor');
+            element.appendChild(cursor);
+
+            for (let i = 0; i < text.length; i++) {
+                element.insertBefore(document.createTextNode(text[i]), cursor);
+                await new Promise(resolve => setTimeout(resolve, speed));
+            }
+            cursor.remove();
+
+            // Show the input field after typing animation ends
+            form.classList.remove('hidden');
+            loadingSpinner.classList.add('hidden');
+        }
+
+        function addMessage(content, isUser = true) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message', isUser ? 'user-message' : 'ai-message');
+            chatContainer.appendChild(messageElement);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            if (isUser) {
+                messageElement.textContent = content;
+            } else {
+                typeMessage(messageElement, content);
+            }
+        }
+
+        // Display the sign-in popup
+        function showSignInPopup() {
+            signInModal.style.display = 'flex';
+        }
+
+        // Redirect to sign-in page
+        function redirectToSignIn() {
+            window.location.href = "{% url 'account_signup' %}";
+        }
+
+        form.addEventListener('submit', async function(event) {
+            event.preventDefault();
+            promptCount += 1;
+
+            if (promptCount > 5) {
+                showSignInPopup();
+                return;
+            }
+
+            const formData = new FormData(form);
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            // Hide the form input field and show the loading spinner
+            form.classList.add('hidden');
+            loadingSpinner.classList.remove('hidden');
+            loadingSpinner.classList.add('visible');
+
+            const userInput = formData.get('text_input');
+            addMessage(userInput, true);
+
+            try {
+                const response = await fetch("{% url 'handle_post' %}", {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': csrfToken },
+                    body: formData
+                });
+
+                if (!response.ok) throw new Error("Network response was not ok");
+
+                const data = await response.json();
+                if (data.result_text) {
+                    addMessage(data.result_text, false);
+                    form.reset();
+                } else if (data.error) {
+                    addMessage(`Error: ${data.error}`, false);
+                } else if (data.errors) {
+                    addMessage(`Form errors: ${JSON.stringify(data.errors)}`, false);
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                addMessage("An error occurred while processing your request.", false);
+            } finally {
+                // Hide the spinner and show the input field after AI response
+                loadingSpinner.classList.remove('visible');
+                loadingSpinner.classList.add('hidden');
+                form.classList.remove('hidden');
+            }
+        });
+
+        form.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                submitButton.click();
+            }
+        });
+    </script>
+</body>
+</html>
